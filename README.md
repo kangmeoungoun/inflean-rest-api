@@ -1,18 +1,40 @@
 ### 2.이벤트 생성 API 개발
-#### 이벤트 API 테스트 클래스 생성
+#### 201 응답 받기
 
-
+#### 테스트시 응답코드 한글 깨짐 현상 해결방법
+    - body 응답값 : location":"ê°ë¨ì­ D2 ì¤íí í©í ë¦¬"
 ```java
-@WebMvcTest 
-//웹과 관련된 테스트 여서 슬라이싱 테스트 타고 부른다.
-//모든 빈들은 등록하는게 아니라 웹과 관련된 것들만 등록
-//근데 이자체를 단위테스트라고 보기 어렵다.
-//MockMvc 웹서버를 뛰우지 않아서 조금 빠르다. 디스패치 서블릿을 만들어야 해서 단위테스트 보다 빠르진 않다.
-
-mockMvc.perform(post("/api/events/"))
-        .andDo(print())
-        .andExpect(status().isCreated())
-        .andExpect(status().is(201)) //이렇게도 가능 
+//1
+@Autowired
+WebApplicationContext ctx;
+    @BeforeEach
+    void setUp(){
+        mockMvc = MockMvcBuilders.webAppContextSetup(ctx)
+                .addFilters(new CharacterEncodingFilter("UTF-8"))
+                .alwaysDo(print())
+                .build();
+    }
+//2
+    mockMvc.perform(post("/api/events/")
+    .contentType(MediaType.APPLICATION_JSON)
+    .characterEncoding("UTF-8")
 ```
 
-![image](https://user-images.githubusercontent.com/40969203/111149483-47d89480-85d0-11eb-863e-9382bb2137ee.png)
+
+
+
+#### 헤더 정보에 location 집어넣기
+```java
+MockHttpServletResponse:
+        Status = 201
+        Error message = null
+        Headers = [Location:"http://localhost/api/events/%257Bid%257D", Content-Type:"application/hal+json"]
+
+        URI createUri = linkTo(EventController.class).slash("{id}").toUri();
+        event.setId(10);
+        return ResponseEntity.created(createUri).body(event);
+```
+- http://localhost/api/events/{id} 실제 id 의 값은 본문에 포함되어 있어서 클라이언트에서 교체해서 사용.
+  
+![image](https://user-images.githubusercontent.com/40969203/111154218-51fd9180-85d6-11eb-9f5c-776dd07a4adf.png)
+

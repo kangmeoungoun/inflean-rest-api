@@ -1,40 +1,22 @@
 ### 2.이벤트 생성 API 개발
-#### 201 응답 받기
+#### 이벤트 Repository
 
-#### 테스트시 응답코드 한글 깨짐 현상 해결방법
-    - body 응답값 : location":"ê°ë¨ì­ D2 ì¤íí í©í ë¦¬"
 ```java
-//1
-@Autowired
-WebApplicationContext ctx;
-    @BeforeEach
-    void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(ctx)
-                .addFilters(new CharacterEncodingFilter("UTF-8"))
-                .alwaysDo(print())
-                .build();
-    }
-//2
-    mockMvc.perform(post("/api/events/")
-    .contentType(MediaType.APPLICATION_JSON)
-    .characterEncoding("UTF-8")
+EventRepository 를 사용해서 처음 테스트 할떄 WebMvcTest는 슬라이싱 테스트라 서 빈 주입을 못받는다.
+@MockBean
+    EventRepository eventRepository;
+
+이렇게 해도 테스트가 깨지는데 MockBean 으로 주입받응 에들은 전부 null 반환
+그래서 stubbing해줘야 한다.
+event.setId(10);
+when(eventRepository.save(event)).thenReturn(event);
+
+```
+```java
+
+andExpect(header().exists("Location")
+-> andExpect(header().exists(HttpHeaders.LOCATION)) 
+TypeSafe 하게 수정.
 ```
 
-
-
-
-#### 헤더 정보에 location 집어넣기
-```java
-MockHttpServletResponse:
-        Status = 201
-        Error message = null
-        Headers = [Location:"http://localhost/api/events/%257Bid%257D", Content-Type:"application/hal+json"]
-
-        URI createUri = linkTo(EventController.class).slash("{id}").toUri();
-        event.setId(10);
-        return ResponseEntity.created(createUri).body(event);
-```
-- http://localhost/api/events/{id} 실제 id 의 값은 본문에 포함되어 있어서 클라이언트에서 교체해서 사용.
-  
-![image](https://user-images.githubusercontent.com/40969203/111154218-51fd9180-85d6-11eb-9f5c-776dd07a4adf.png)
-
+![image](https://user-images.githubusercontent.com/40969203/111160261-46619900-85dd-11eb-95d3-d926f9a6382a.png)

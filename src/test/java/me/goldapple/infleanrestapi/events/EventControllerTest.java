@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MockMvcBuilder;
@@ -19,30 +21,20 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import java.time.LocalDateTime;
 import java.time.Month;
 
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest
 class EventControllerTest{
     @Autowired
     MockMvc mockMvc;
-
-
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    WebApplicationContext ctx;
-    @BeforeEach
-    void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(ctx)
-                .addFilters(new CharacterEncodingFilter("UTF-8"))
-                .alwaysDo(print())
-                .build();
-    }
-
+    @MockBean
+    EventRepository eventRepository;
 
     @Test
     void createEvent() throws Exception{
@@ -59,14 +51,18 @@ class EventControllerTest{
                 .location("강남역 D2 스타텁 팩토리")
                 .build();
 
+        event.setId(10);
+        when(eventRepository.save(event)).thenReturn(event);
         String content = objectMapper.writeValueAsString(event);
         mockMvc.perform(post("/api/events/")
-                .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("UTF-8")
-                .accept(MediaTypes.HAL_JSON)
-                .content(content))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .characterEncoding("UTF-8")
+                                .accept(MediaTypes.HAL_JSON)
+                                .content(content))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").exists());
+                .andExpect(jsonPath("id").exists())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE , MediaTypes.HAL_JSON_VALUE));
     }
 }

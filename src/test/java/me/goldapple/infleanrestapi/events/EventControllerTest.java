@@ -1,10 +1,13 @@
 package me.goldapple.infleanrestapi.events;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.properties.PropertyMapping;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,10 +38,9 @@ class EventControllerTest{
     ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("EvnetDto 사용하여 입력값 무시하기")
+    @DisplayName("정상적으로 이벤트를 생성하는 테스트")
     void createEvent() throws Exception{
-        Event event =Event.builder()
-                .id(100)
+        EventDto event =EventDto.builder()
                 .name("Spring")
                 .description("REST API Development with Spring")
                 .beginEnrollmentDateTime(LocalDateTime.of(2021, Month.MARCH,15,14,21))
@@ -49,9 +51,6 @@ class EventControllerTest{
                 .maxPrice(200)
                 .limitOfEnrollment(100)
                 .location("강남역 D2 스타텁 팩토리")
-                .free(true)
-                .offline(false)
-                .eventStatus(EventStatus.PUBLISHED)
                 .build();
 
         String content = objectMapper.writeValueAsString(event);
@@ -71,7 +70,7 @@ class EventControllerTest{
     }
 
     @Test
-    @DisplayName("입력받는값이 아닌데 입력값이 들어올때 BadRequest")
+    @DisplayName("입력받는값이 아닌데 입력값이 들어올때 BadRequest 테스트")
     void createEvent_Bad_Request() throws Exception{
         Event event =Event.builder()
                 .id(100)
@@ -98,6 +97,15 @@ class EventControllerTest{
                                 .content(content))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
+    }
 
+    @Test
+    @DisplayName("입력값이 빈값이 들어왔을때 에러가 발생하는 테스트")
+    void createEvent_Bad_Request_Empty_Input() throws Exception{
+        EventDto eventDto = EventDto.builder().build();
+        this.mockMvc.perform(post("/api/events")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
     }
 }

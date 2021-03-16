@@ -108,4 +108,27 @@ class EventControllerTest{
                     .content(objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isBadRequest());
     }
+    @Test
+    @DisplayName("입력값이 잘못들어왔을때 에러가 발생하는 테스트")
+    void createEvent_Bad_Request_Wrong_Input() throws Exception{
+        //등록일자 종료일자가 이벤트 시작일자 종료일자보다 느리게 설정
+        //기본가격이 최고 가격보다 높게 설정
+        EventDto eventDto =EventDto.builder()
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021, Month.MARCH,26,14,21))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021, Month.MARCH,25,14,21))
+                .beginEventDateTime(LocalDateTime.of(2021, Month.MARCH,24,14,21))
+                .endEventDateTime(LocalDateTime.of(2021, Month.MARCH,23,14,21))
+                .basePrice(10000)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타텁 팩토리")
+                .build();
+        this.mockMvc.perform(post("/api/events")
+                                     .contentType(MediaType.APPLICATION_JSON)
+                                     .content(objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
+    }
+
 }

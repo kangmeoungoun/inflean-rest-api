@@ -2,10 +2,7 @@ package me.goldapple.infleanrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,6 +35,7 @@ class EventControllerTest{
     ObjectMapper objectMapper;
 
     @Test
+    @DisplayName("EvnetDto 사용하여 입력값 무시하기")
     void createEvent() throws Exception{
         Event event =Event.builder()
                 .id(100)
@@ -70,6 +68,36 @@ class EventControllerTest{
                 .andExpect(jsonPath("id").value(Matchers.not(100)))
                 .andExpect(jsonPath("free").value(Matchers.not(true)))
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
+    }
+
+    @Test
+    @DisplayName("입력받는값이 아닌데 입력값이 들어올때 BadRequest")
+    void createEvent_Bad_Request() throws Exception{
+        Event event =Event.builder()
+                .id(100)
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021, Month.MARCH,15,14,21))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021, Month.MARCH,16,14,21))
+                .beginEventDateTime(LocalDateTime.of(2021, Month.MARCH,17,14,21))
+                .endEventDateTime(LocalDateTime.of(2021, Month.MARCH,18,14,21))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타텁 팩토리")
+                .free(true)
+                .offline(false)
+                .eventStatus(EventStatus.PUBLISHED)
+                .build();
+
+        String content = objectMapper.writeValueAsString(event);
+        mockMvc.perform(post("/api/events/")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .characterEncoding("UTF-8")
+                                .accept(MediaTypes.HAL_JSON)
+                                .content(content))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
 
     }
 }

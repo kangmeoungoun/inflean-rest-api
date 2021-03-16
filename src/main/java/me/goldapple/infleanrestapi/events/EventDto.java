@@ -1,21 +1,16 @@
 package me.goldapple.infleanrestapi.events;
 
+
 import lombok.*;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Builder
-@AllArgsConstructor
+
+@Data
 @NoArgsConstructor
-@Getter
-@Setter
-@EqualsAndHashCode(of = {"id"})
-@Entity
-public class Event{
-    @Id
-    @GeneratedValue
-    private Integer id;
+@AllArgsConstructor
+@Builder
+public class EventDto{
     private String name;
     private String description;
     private LocalDateTime beginEnrollmentDateTime;
@@ -26,8 +21,4 @@ public class Event{
     private int basePrice; // (optional)
     private int maxPrice; // (optional)
     private int limitOfEnrollment;
-    private boolean offline;
-    private boolean free;
-    @Enumerated(EnumType.STRING)
-    private EventStatus eventStatus = EventStatus.DRAFT;
 }

@@ -1,32 +1,22 @@
 ### 2.이벤트 생성 API 개발
-#### BadRequest 처리
+#### Bad Request 응답
 
-##### 스프링부트 버전 2.3.0에서  starter web에 디펜던시로 spring-boot-starter-validation 제외
-```xml
-
-<dependency>
-    <groupId>javax.validation</groupId>
-    <artifactId>validation-api</artifactId>
-    <version>2.0.1.Final</version>
-</dependency>
-validation-api -> spring-boot-starter-validation 를 사용
-<dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-</dependency>
-
-멋도 모르고 인텔리제이에서 그냥 add maven 을 해버러셔 위에걸 들고 와버렸다.
-```
-
-##### Error 가  BindResult 상위 인터페이스라 에러를 써도 상관없지만  BindResult 에 필요한 메소드가 있을시
-BindResult 를 사용한다.
-
-##### Validator 등록방법
-- 1.강의에서 처럼 EventValidator 빈으로 등록후  dto,errors 를 파라미터로 받는 메소드를 사용.
-- 2.Validator 인터페이스를 구현한 클래스를 컨트롤러에서 @InitBinder 이용하여 사용. 
+##### Errors json 변환 할수 없는 이유
 ```java
- @InitBinder
-   public void initBinder(WebDataBinder binder) {
-      binder.addValidator(new EventValidator());
-   }
+오브젝트 맵퍼를 써서 변환하는데 그때 오브젝트는맵퍼는 BeanSerializer 를 사용한다.
+Errors 는 자반 bean 스펙을 준수하고 있지 않아 serializer 안된다.
+
+```
+##### Errors 에 대한 Serializer 만들기
+```java
+- 필드 에러
+errors.rejectValue("maxPrice","wrongValue","MaxPrice is Wrong"); 
+- 글로벌 에러
+errors.reject("wrongPrices","Values fo prices are wrong"); 
+
+Errors에대한 Serializer 만들때는 필드에러, 글로벌 에러 를 둘다 맵핑해준다.
+
+ 
+스프링 부트가 제공하는 오브젝트 맵퍼에 등록해야 한다 해당 클래스에 @JsonComponent 추가
+오브젝트 맵퍼는 에러 Serializer 를 한다 Errors 라는 객체를 사용할때.
 ```

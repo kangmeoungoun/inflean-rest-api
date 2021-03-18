@@ -1,12 +1,15 @@
 package me.goldapple.infleanrestapi.events;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 class EventTest{
 
     @Test
@@ -32,40 +35,53 @@ class EventTest{
         assertThat(event.getName()).isEqualTo(name);
         assertThat(event.getDescription()).isEqualTo(spring);
     }
-    @Test
+    @ParameterizedTest
     @DisplayName("비즈니스 로직에 맞는 free 상태값 변경 테스트")
-    void testFree(){
+    @MethodSource("stringIntAndBooleanProvider")
+    void testFree(int basePrice,int maxPrice,boolean isFree){
         //given
+        System.out.println("basePrice = " + basePrice);
         Event event = Event.builder()
-                .basePrice(100)
-                .maxPrice(0)
+                .basePrice(basePrice)
+                .maxPrice(maxPrice)
                 .build();
         //when
         event.statusUpdate();
         //then
-        assertThat(event.isFree()).isFalse();
+        assertThat(event.isFree()).isEqualTo(isFree);
     }
 
-    @Test
+    @ParameterizedTest
     @DisplayName("비즈니스 로직에 맞는 offline 상태값 변경 테스트")
-    void testOffline() {
+    @MethodSource("stringAndBooleanProvider")
+    void testOffline(String location,boolean isOffline) {
         //given
         //장소가 있을경우
         Event event = Event.builder()
-                .location("강남역 D2 스타텁 팩토리")
+                .location(location)
                 .build();
         //when
         event.statusUpdate();
         //then
-        assertThat(event.isOffline()).isTrue();
-
-        //given
-        //장소가 없을경우
-        event = Event.builder().build();
-        //when
-        event.statusUpdate();
-        //then
-        assertThat(event.isOffline()).isFalse();
+        assertThat(event.isOffline()).isEqualTo(isOffline);
     }
+
+
+    static Stream<Arguments> stringIntAndBooleanProvider(){
+        return Stream.of(
+          Arguments.arguments(0,0,true),
+          Arguments.arguments(100,0,false),
+          Arguments.arguments(0,100,false)
+        );
+    }
+
+    static Stream<Arguments> stringAndBooleanProvider(){
+        return Stream.of(
+          Arguments.arguments("강남역 D2 스타텁 팩토리",true),
+          Arguments.arguments(null,false)
+        );
+    }
+
+
 
 }

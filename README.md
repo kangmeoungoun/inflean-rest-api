@@ -1,21 +1,7 @@
 ### 3.HATEOAS 와Self-Describtive Message 적용
-#### 스프링 HATEOAS 적용
+#### 스프링 REST Docs 소개
 
-```java 
-@JsonUnwrapped
-Event event
-
-//이벤트 랩핑 지우고 싶을때 사용.
-```
-```json
- event:{
-  "id": 1,
-  "name": "Spring",
-  "description": "REST API Development with Spring",
-  "beginEnrollmentDateTime": "2021-03-15T14:21:00"
-}
-"id": 1,
-"name": "Spring",
-"description": "REST API Development with Spring",
-"beginEnrollmentDateTime": "2021-03-15T14:21:00"
-```
+##### spring REST Dcos
+    - 레스트 api 문서의 조각을 생성해주는 라이브러리
+    - 우리가 만든 테스트를 실행하면서 요청과응답 응답의 헤더를 이런정보를 사용하여 문서 조각을 만듦
+    - 문서조각을 모아서 REST document 를 만듦 html 로

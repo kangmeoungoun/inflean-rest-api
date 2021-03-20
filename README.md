@@ -1,11 +1,45 @@
 ### 3.HATEOAS 와Self-Describtive Message 적용
-#### 테스트용 DB와 설정 분리하기
+#### API 인덱스 만들기
 
-##### application.properties main/test 분리
-1. application.properties test 에 추가 
-    - main 에 있는 application.properties test application.properties 가 덮어쓴다.
-    - 소스먼저 컴파일 되고 그다음에 테스트 컴파일 해서 소스해서 적용한것들이 다 날아간다. 그래서 중복설정할 값들이 많아진다.
-    - 그래서 오버라이딩 하고 싶은것만 하기 위해 application.properties 파일 이름을 변경해준다.
-    - 변경한대신 기본적으로 사용되지 않는다 직접 선언을 해주어야한다.
-    - application-test.properties 로 변경후 테스트 클래스에 @ActiveProfiles("test") 추가
-    
+- 웹페이지 처음 접근할때 APi 진입점을 만든다.
+- 각각의 리소스에 대한 루트가 나오길 바란다.(링크)
+- 에러가 발생하면 전이 가능한 곳은 index 뿐.
+
+##### linkTO
+```java
+add(linkTo(methodOn(IndexController.class).index()).withRel("index"));
+IndexController.class 의 index() 라는 메소드 로 링크를 만든다.
+@GetMapping("/api")
+public RepresentationModel index(){
+}
+
+"index": {
+        "href": "http://localhost:8080/api"
+}
+```
+
+##### 리팩토링
+```java
+//변경전
+EntityModel<Errors> errorsModel = EntityModel.of(errors);
+errorsModel.add(linkTo(methodOn(IndexController.class).index()).withRel("index"));
+if(errors.hasErrors()){
+    return ResponseEntity.badRequest().body(errorsModel);
+}
+
+//변경후
+public class ErrorsResource extends EntityModel<Errors>{
+    public ErrorsResource(Errors content , Link... links){
+        super(content , links);
+        add(linkTo(methodOn(IndexController.class).index()).withRel("index"));
+    }
+}
+
+private ResponseEntity<ErrorsResource> badRequest(Errors errors){
+    return ResponseEntity.badRequest().body(new ErrorsResource(errors));
+}
+if(errors.hasErrors()){
+    return badRequest(errors);
+}
+
+```

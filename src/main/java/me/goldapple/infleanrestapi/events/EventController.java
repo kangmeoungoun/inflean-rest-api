@@ -2,6 +2,8 @@ package me.goldapple.infleanrestapi.events;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.RequiredArgsConstructor;
+import me.goldapple.infleanrestapi.common.ErrorsResource;
+import me.goldapple.infleanrestapi.index.IndexController;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -27,18 +29,18 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor
 public class EventController{
 
-    @JsonUnwrapped
     private final EventRepository eventRepository;
     private final ModelMapper modelMapper;
     private final EventValidator eventValidator;
     @PostMapping()
     public ResponseEntity<?> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
+
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().body(errors);
+            return badRequest(errors);
         }
         eventValidator.validate(eventDto,errors);
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().body(errors);
+            return badRequest(errors);
         }
         Event event = modelMapper.map(eventDto,Event.class);
         event.statusUpdate();
@@ -46,12 +48,22 @@ public class EventController{
 
         WebMvcLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
         URI createUri = selfLinkBuilder.toUri();
+        /*
         EntityModel<Event> eventResource = EntityModel.of(newEvent);
         eventResource.add(linkTo(EventController.class).withRel("query-events"));
         eventResource.add(selfLinkBuilder.withSelfRel());
         eventResource.add(selfLinkBuilder.withRel("update-event"));
         eventResource.add(Link.of("/docs/index.html#resources-events-create").withRel("profile"));
+        */
+        EntityModel<Event> eventResource = new EventResource(newEvent);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(selfLinkBuilder.withRel("update-event"));
+        eventResource.add(Link.of("/docs/index.html#resources-events-create").withRel("profile"));
 
         return ResponseEntity.created(createUri).body(eventResource);
+    }
+
+    private ResponseEntity<ErrorsResource> badRequest(Errors errors){
+        return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
 }

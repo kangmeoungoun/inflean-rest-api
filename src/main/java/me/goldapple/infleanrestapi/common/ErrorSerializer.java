@@ -11,6 +11,7 @@ import java.io.IOException;
 public class ErrorSerializer extends JsonSerializer<Errors>{
     @Override
     public void serialize(Errors errors , JsonGenerator gen , SerializerProvider serializerProvider) throws IOException{
+        gen.writeFieldName("errors");
         gen.writeStartArray();
         //필드에러 담아준다.
         errors.getFieldErrors().forEach(e->{

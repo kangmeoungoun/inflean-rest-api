@@ -1,4 +1,4 @@
-### 3.HATEOAS 와Self-Describtive Message 적용
+### 4.이벤트 조회 및 수정 REST API 개발
 #### 이벤트 목록 조회 API 구현
 
 ##### eventRepository.findAll(pageable) 로조회할시 이전페이지 다음페이지 에 대한 링크가 없다.

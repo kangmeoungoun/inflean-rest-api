@@ -12,6 +12,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,6 +34,11 @@ class IndexControllerTest{
         this.mockMvc.perform(get("/api/"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("_links.events").exists());
+                .andExpect(jsonPath("_links.events").exists())
+                .andDo(document("index",
+                                    links(
+                                            linkWithRel("events").description("이벤트 목록 조회")
+                                    )
+                                ));
     }
 }

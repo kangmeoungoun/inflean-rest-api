@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Set;
@@ -19,8 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountServiceTest {
     @Autowired
     AccountService accountService;
+
     @Autowired
-    AccountRepository accountRepository;
+    PasswordEncoder passwordEncoder;
 
     @Test
     @DisplayName("UserDetailsService 사용하여 username 으로 사용자 찾기")
@@ -33,12 +35,12 @@ class AccountServiceTest {
                 .password(password)
                 .roles(Set.of(AccountRole.ADMIN,AccountRole.USER))
                 .build();
-        this.accountRepository.save(account);
+        this.accountService.saveAccount(account);
         //when
         UserDetailsService userDetailsService = accountService;
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         //then
-        Assertions.assertThat(userDetails.getPassword()).isEqualTo(password);
+        Assertions.assertThat(passwordEncoder.matches(password,userDetails.getPassword())).isTrue();
     }
 
     @Test

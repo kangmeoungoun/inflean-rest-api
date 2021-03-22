@@ -36,7 +36,8 @@ public class AppConfig{
                         .email("kes98202@naver.com")
                         .password("goldapple")
                         .roles(Set.of(AccountRole.ADMIN , AccountRole.USER))
-                        .build();
+                        .build()
+                        ;
                 accountService.saveAccount(account);
             }
         };

@@ -38,7 +38,7 @@ public class AppConfig{
             public void run(ApplicationArguments args) throws Exception{
                 Account admin = Account.builder()
                         .email(appProperties.getAdminUsername())
-                        .password(appProperties.getUserPassword())
+                        .password(appProperties.getAdminPassword())
                         .roles(Set.of(AccountRole.ADMIN,AccountRole.USER))
                         .build()
                         ;

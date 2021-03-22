@@ -4,6 +4,7 @@ import me.goldapple.infleanrestapi.accounts.Account;
 import me.goldapple.infleanrestapi.accounts.AccountRepository;
 import me.goldapple.infleanrestapi.accounts.AccountRole;
 import me.goldapple.infleanrestapi.accounts.AccountService;
+import me.goldapple.infleanrestapi.common.AppProperties;
 import me.goldapple.infleanrestapi.common.BaseControllerTest;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.oauth2.common.util.Jackson2JsonParser;
 import org.springframework.test.web.servlet.ResultActions;
@@ -43,6 +43,8 @@ class EventControllerTest extends BaseControllerTest{
     @Autowired
     AccountRepository accountRepository;
 
+    @Autowired
+    AppProperties appProperties;
     @BeforeEach
     void setUp(){
         eventRepository.deleteAll();
@@ -142,8 +144,8 @@ class EventControllerTest extends BaseControllerTest{
 
     private String getAccessToken() throws Exception{
         //given
-        String username = "kes98201@naver.com";
-        String password = "123456";
+        String username = appProperties.getAdminUsername();
+        String password = appProperties.getAdminPassword();
         Account goldapple = Account.builder()
                 .email(username)
                 .password(password)
@@ -151,10 +153,8 @@ class EventControllerTest extends BaseControllerTest{
                 .build();
         this.accountService.saveAccount(goldapple);
 
-        String clientId = "myApp";
-        String clientSecret = "pass";
         ResultActions perform = this.mockMvc.perform(post("/oauth/token")
-                                                             .with(httpBasic(clientId , clientSecret))
+                                                             .with(httpBasic(appProperties.getClientId() , appProperties.getClientSecret()))
                                                              .param("username" , username)
                                                              .param("password" , password)
                                                              .param("grant_type" , "password"));

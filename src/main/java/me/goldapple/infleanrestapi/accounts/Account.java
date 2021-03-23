@@ -1,5 +1,6 @@
 package me.goldapple.infleanrestapi.accounts;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -19,6 +20,7 @@ public class Account{
     private Integer id;
     @Column(unique = true)
     private String email;
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)

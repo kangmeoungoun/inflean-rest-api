@@ -1,20 +1,35 @@
 ### 5.REST API 보안 적용
-#### 현재 사용자 조회
+#### 출력값 제한하기
 
-##### 인증된사용자 정보
-```java
-Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-authentication.getPrincipal();
-이때 getPrincipal() 은 UserDetailsService 구현체의 loadUserByUsername() 의 리턴값이다
-이떄 리턴값은 User 을 상속받는 클래스또는 User 를 리턴한다.
-
-
-public ResponseEntity getEvent(@PathVariable Integer id,
-                                @AuthenticationPrincipal(expression = "#this == 'anonymousUser' ? null : account") Account currentUser){}
-메소드 파라미터에 위처럼 작성해주면 loadUserByUsername() 의 리턴값 에서 인증이 됬으면 getAccount()를 해줘 Accout 를 리턴
-인증되지 않은 사용자는 loadUserByUsername() 의 리턴값 이 들어오지않고 "anonymousUser" 라는 문자열이 들어온다.
-그래서 el표현식으로 3항연산자로 null 처리
+##### 이벤트 생성시 Responsebody
+```json
+"manager": {
+		"id": 3,
+		"email": "admin@email.com",
+		"password": "{bcrypt}$2a$10$0DFX4vbXmsFiyUghBtnxVO7fF1o4cx0W6v8FaOhI7pQXxYm6mhogK",
+		"roles": [
+			"USER",
+			"ADMIN"
+		]
+	},
 
 ```
-FORBIDDEN(403) : 인증은 됐으나 해당 리소스를 볼 권한이 없으면 
-UNAUTHORIZED(401) : 인증이 필요한 리소스에 접근할 때 인증이 안되어 있는 유저가 접근한경우
+email, password,roles 는 보여주고 싶지 않을때
+Account 에서  해당 컬럼에 @JsonIgnore 를 하면 되지만 그럴경우 모든 응답에 이 정보들이 빠지기 때문에
+어떨때는 email 을 응답에 사용할때도 있기때문에 이런식으로 하면 안될것같다.
+```java
+public class AccountSerializer extends JsonSerializer<Account>{
+    @Override
+    public void serialize(Account account , JsonGenerator gen , SerializerProvider serializerProvider) throws IOException{
+        gen.writeStartObject();
+        gen.writeNumberField("id",account.getId());
+        gen.writeEndObject();
+    }
+}
+
+@JsonComponent 사용하지 않은 이유는 모든 응답에 다 적용하지 않기위해
+
+@JsonSerialize(using = AccountSerializer.class)
+private Account manager;
+Event 에서 Account 에 이렇게 적용 해준다.
+```

@@ -1,7 +1,9 @@
 package me.goldapple.infleanrestapi.events;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 import me.goldapple.infleanrestapi.accounts.Account;
+import me.goldapple.infleanrestapi.accounts.AccountSerializer;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -35,6 +37,7 @@ public class Event{
 
     @ManyToOne
     @JoinColumn(name = "account_id")
+    @JsonSerialize(using = AccountSerializer.class)
     private Account manager;
 
     public void statusUpdate(){

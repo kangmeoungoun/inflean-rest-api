@@ -139,20 +139,20 @@ class EventControllerTest extends BaseControllerTest{
                 ));
     }
 
+    private String getBearerToken(boolean needToCreateAccount) throws Exception{
+        return "Bearer " + getAccessToken(needToCreateAccount);
+    }
     private String getBearerToken() throws Exception{
-        return "Bearer " + getAccessToken();
+        return "Bearer " + getAccessToken(true);
     }
 
-    private String getAccessToken() throws Exception{
+    private String getAccessToken(boolean needToCreateAccount) throws Exception{
         //given
         String username = appProperties.getAdminUsername();
         String password = appProperties.getAdminPassword();
-        Account goldapple = Account.builder()
-                .email(username)
-                .password(password)
-                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER ))
-                .build();
-        this.accountService.saveAccount(goldapple);
+        if(needToCreateAccount){
+            createAccount(username , password);
+        }
 
         ResultActions perform = this.mockMvc.perform(post("/oauth/token")
                                                              .with(httpBasic(appProperties.getClientId() , appProperties.getClientSecret()))
@@ -162,6 +162,15 @@ class EventControllerTest extends BaseControllerTest{
         var responseBody = perform.andReturn().getResponse().getContentAsString();
         Jackson2JsonParser parser = new Jackson2JsonParser();
         return parser.parseMap(responseBody).get("access_token").toString();
+    }
+
+    private Account createAccount(String username , String password){
+        Account goldapple = Account.builder()
+                .email(username)
+                .password(password)
+                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER ))
+                .build();
+        return this.accountService.saveAccount(goldapple);
     }
 
     @Test
@@ -307,7 +316,8 @@ class EventControllerTest extends BaseControllerTest{
     @DisplayName("기존의 이벤트를 하나 조회하기")
     void getEvent() throws Exception{
         //given
-        Event event = this.generateEvent(100);
+        Account account = this.createAccount(appProperties.getAdminUsername() , appProperties.getAdminPassword());
+        Event event = this.generateEvent(100,account);
         //when
         this.mockMvc.perform(get("/api/events/{id}",event.getId()))
                 .andDo(print())
@@ -358,7 +368,9 @@ class EventControllerTest extends BaseControllerTest{
     @DisplayName("이벤트를 정상적으로 수정하기")
     void updateEvent() throws Exception{
         //given
-        Event event = this.generateEvent(200);
+        Account account = this.createAccount(appProperties.getAdminUsername() , appProperties.getAdminPassword());
+
+        Event event = this.generateEvent(200,account);
 
         EventDto eventDto = this.modelMapper.map(event , EventDto.class);
         String eventName = "UpdatedEvent";
@@ -366,7 +378,7 @@ class EventControllerTest extends BaseControllerTest{
         //when &then
         this.mockMvc.perform(put("/api/events/{id}",event.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(false))
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -499,23 +511,35 @@ class EventControllerTest extends BaseControllerTest{
 
 
     private Event generateEvent(int index){
-        Event event = Event.builder()
-                .name("event" + index)
-                .description("REST API Development with Spring")
-                .beginEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 23 , 14 , 21))
-                .closeEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 24 , 14 , 21))
-                .beginEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 25 , 14 , 21))
-                .endEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 26 , 14 , 21))
-                .basePrice(100)
-                .maxPrice(200)
-                .limitOfEnrollment(100)
-                .location("강남역 D2 스타텁 팩토리")
-                .free(false)
-                .offline(true)
-                .eventStatus(EventStatus.DRAFT)
-                .build();
+        Event event = buildEvent(index);
         return this.eventRepository.save(event);
     }
+    private Event generateEvent(int index,Account account){
+        Event event = buildEvent(index);
+        event.setManager(account);
+        return this.eventRepository.save(event);
+    }
+    private Event buildEvent(int index){
+        return Event.builder()
+                    .name("event" + index)
+                    .description("REST API Development with Spring")
+                    .beginEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 23 , 14 , 21))
+                    .closeEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 24 , 14 , 21))
+                    .beginEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 25 , 14 , 21))
+                    .endEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 26 , 14 , 21))
+                    .basePrice(100)
+                    .maxPrice(200)
+                    .limitOfEnrollment(100)
+                    .location("강남역 D2 스타텁 팩토리")
+                    .free(false)
+                    .offline(true)
+                    .eventStatus(EventStatus.DRAFT)
+                    .build();
+    }
+
+
+
+
 
 
 }

@@ -1,12 +1,9 @@
 package me.goldapple.infleanrestapi.events;
 
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.RequiredArgsConstructor;
 import me.goldapple.infleanrestapi.accounts.Account;
-import me.goldapple.infleanrestapi.accounts.AccountAdapter;
 import me.goldapple.infleanrestapi.accounts.CurrentUser;
 import me.goldapple.infleanrestapi.common.ErrorsResource;
-import me.goldapple.infleanrestapi.index.IndexController;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,18 +11,14 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,7 +26,6 @@ import java.net.URI;
 import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Controller
 @RequestMapping(value = "/api/events",produces = MediaTypes.HAL_JSON_VALUE)

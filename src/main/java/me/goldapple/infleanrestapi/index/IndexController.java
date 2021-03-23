@@ -1,7 +1,6 @@
 package me.goldapple.infleanrestapi.index;
 
 import me.goldapple.infleanrestapi.events.EventController;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

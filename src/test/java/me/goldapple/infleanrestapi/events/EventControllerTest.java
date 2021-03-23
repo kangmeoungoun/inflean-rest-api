@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -274,6 +275,33 @@ class EventControllerTest extends BaseControllerTest{
         ;
 
     }
+    @Test
+    @DisplayName("30개의 이벤트를 10개씩 두번째 페이지 조회하기")
+    void queryEventsWithAuthentication() throws Exception{
+        //given
+        IntStream.range(0,30).forEach(this::generateEvent);
+
+        //when
+        this.mockMvc.perform(get("/api/events")
+                                     .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                                     .param("page","1")
+                                     .param("size","10")
+                                     .param("sort","name,DESC"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andExpect(jsonPath("_links.create-event").exists())
+                ;
+        ;
+
+    }
+
+
+
+
 
     @Test
     @DisplayName("기존의 이벤트를 하나 조회하기")
@@ -429,6 +457,44 @@ class EventControllerTest extends BaseControllerTest{
                 .andExpect(status().isNotFound())
                 .andDo(print());
     }
+    @Test
+    @DisplayName("이벤트 매니저가 아닌 사람이 이벤트 수정 실패")
+    void updateEventForbidden() throws Exception{
+        String username = appProperties.getUserUsername();
+        String password = appProperties.getUserPassword();
+        Account goldapple = Account.builder()
+                .email(username)
+                .password(password)
+                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER ))
+                .build();
+        Account account = this.accountService.saveAccount(goldapple);
+        Event event = Event.builder()
+                .name("event")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 23 , 14 , 21))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021 , Month.MARCH , 24 , 14 , 21))
+                .beginEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 25 , 14 , 21))
+                .endEventDateTime(LocalDateTime.of(2021 , Month.MARCH , 26 , 14 , 21))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타텁 팩토리")
+                .free(false)
+                .offline(true)
+                .eventStatus(EventStatus.DRAFT)
+                .manager(account)
+                .build();
+        this.eventRepository.save(event);
+        EventDto eventDto = this.modelMapper.map(event , EventDto.class);
+        //when&then
+        this.mockMvc.perform(put("/api/events/"+event.getId())
+                                     .contentType(MediaType.APPLICATION_JSON)
+                                     .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                                     .content(objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isForbidden())
+                .andDo(print());
+    }
+
 
 
 
